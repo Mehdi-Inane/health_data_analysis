@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medical Poll Data Selection</title>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    fetchColumns();
+
+    document.getElementById("columns").addEventListener("change", function() {
+        fetchColumnValues(this.value);
+    });
+
+    document.getElementById("submitSelection").addEventListener("click", function() {
+        submitSelection();
+    });
+});
+
+async function fetchColumns() {
+    const response = await fetch('/columns/');
+    const data = await response.json();
+    const select = document.getElementById("columns");
+    data.columns.forEach(column => {
+        const option = new Option(column, column);
+        select.add(option);
+    });
+}
+
+async function fetchColumnValues(columnName) {
+    const response = await fetch(`/column-values/${columnName}`);
+    const data = await response.json();
+    const select = document.getElementById("values");
+    select.innerHTML = ''; // Clear existing options
+    data.values.forEach(value => {
+        const option = new Option(value, value);
+        select.add(option);
+    });
+}
+
+async function submitSelection() {
+    const selectedColumn = document.getElementById("columns").value;
+    const selectedValues = Array.from(document.getElementById("values").selectedOptions).map(option => option.value);
+    const selection = { [selectedColumn]: selectedValues };
+
+    const response = await fetch('/define-groups/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(selection),
+    });
+    const data = await response.json();
+    console.log(data); // For demonstration, log the API response
+}
+</script>
+</head>
+<body>
+<h2>Select Columns and Values</h2>
+<div>
+    <label for="columns">Choose a column:</label>
+    <select id="columns">
+        <option value="">--Select a column--</option>
+    </select>
+</div>
+<div>
+    <label for="values">Choose values:</label>
+    <select id="values" multiple style="width: 200px; height: 100px;">
+        <!-- Values will be populated based on column selection -->
+    </select>
+</div>
+<button id="submitSelection">Submit Selection</button>
+</body>
+</html>
