@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Landing Page</title>
+    <style>
+        #checkboxes {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div>
+    <label for="columnsSelect">Select Column:</label>
+    <select id="columnsSelect">
+        <option value="">--Please choose an option--</option>
+    </select>
+</div>
+
+<div id="checkboxes">
+    <!-- Checkboxes will be added here -->
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/get_columns')
+            .then(response => response.json())
+            .then(columns => {
+                const select = document.querySelector('#columnsSelect');
+                columns.forEach(column => {
+                    const option = document.createElement('option');
+                    option.value = column;
+                    option.innerText = column;
+                    select.appendChild(option);
+                });
+            });
+
+        const select = document.querySelector('#columnsSelect');
+        select.addEventListener('change', function() {
+            const column = this.value;
+            fetch('/get_unique_values', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({column: column}),
+            })
+            .then(response => response.json())
+            .then(values => {
+                const checkboxesDiv = document.querySelector('#checkboxes');
+                checkboxesDiv.innerHTML = ''; // Clear previous checkboxes
+                values.forEach(value => {
+                    const label = document.createElement('label');
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = value;
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(value));
+                    checkboxesDiv.appendChild(label);
+                    checkboxesDiv.appendChild(document.createElement('br'));
+                });
+            });
+        });
+    });
+</script>
+
+</body>
+</html>
