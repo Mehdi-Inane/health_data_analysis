@@ -37,6 +37,18 @@ def get_groups(df,target_name,groups):
 def list_dict_to_df(list_of_dicts):
     return pd.DataFrame(list_of_dicts)
 
+def types_to_ints(primitive_df_types,column,values):
+    d_type = primitive_df_types[column]
+    if d_type == 'int64' or 'object':
+        app = int
+    else:
+        app == float
+    
+    return [app(value) for value in values]
+
+
+
+
 
 def main():
     filename = 'ALLPOURTALEAUCROISE2.xlsx'

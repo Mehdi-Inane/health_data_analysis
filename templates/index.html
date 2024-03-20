@@ -79,6 +79,9 @@
             <h3>Current Selections</h3>
             <!-- Selected columns and values will be listed here -->
         </div>
+        <div id="resultsTable" class="box">
+            <!-- The table will be dynamically added here -->
+        </div>
         <button id="submitSelection">Submit Selection</button>
     </div>
     <button id="finalizeSelection">Finalize Selections</button>
@@ -111,6 +114,41 @@
                     selectionsBox.appendChild(div);
                 });
             }
+            function generateResultsTable(data) {
+    const resultsContainer = document.getElementById('resultsTable');
+    resultsContainer.innerHTML = ''; // Clear previous results
+
+    // Create a table and its header
+    const table = document.createElement('table');
+    table.style.width = '100%';
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    const th1 = document.createElement('th');
+    th1.textContent = 'Keys';
+    const th2 = document.createElement('th');
+    th2.textContent = 'Values';
+    headerRow.appendChild(th1);
+    headerRow.appendChild(th2);
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Create table body
+    const tbody = document.createElement('tbody');
+    Object.keys(data).forEach(key => {
+        const row = document.createElement('tr');
+        const keyCell = document.createElement('td');
+        keyCell.textContent = key;
+        const valueCell = document.createElement('td');
+        valueCell.textContent = data[key];
+        row.appendChild(keyCell);
+        row.appendChild(valueCell);
+        tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+
+    // Append the table to the results container
+    resultsContainer.appendChild(table);
+}
         
             // Populate column selectors
             fetch('/get_columns')
@@ -176,28 +214,28 @@
         
             // Finalize and send all data
             finalizeBtn.addEventListener('click', function() {
-                if (Object.keys(selections).length > 0 && targetColumn) {
-                    const dataToSend = {
-                        selections: selections,
-                        targetColumn: targetColumn
-                    };
-                    fetch('/finalize_selections', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(dataToSend),
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log("Data sent successfully", data);
-                        // Handle any response here, such as confirming success to the user
-                    });
-                } else {
-                    console.log("No selections or target column to send.");
-                    // Provide feedback to the user to make a selection
-                }
-            });
+    if (Object.keys(selections).length > 0 && targetColumn) {
+        const dataToSend = {
+            selections: selections,
+            targetColumn: targetColumn
+        };
+        fetch('/finalize_selections', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dataToSend),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Data received successfully", data);
+            // Call the function to generate and append the table
+            generateResultsTable(data);
+        });
+    } else {
+        console.log("No selections or target column to send.");
+    }
+});
         });
         </script>
         

@@ -6,6 +6,8 @@ app = Flask(__name__)
 
 # Load your Excel file here, as before
 df = pd.read_excel('last_50_rows.xlsx')
+types = df.dtypes.apply(lambda x: x.name).to_dict()
+
 
 @app.route('/')
 def home():
@@ -27,9 +29,13 @@ def finalize_selections():
     data = request.json
     print("Finalized selections:", data['selections'])
     print("Finalized target column:", data['targetColumn'])
-    # Process the data as needed here
-
-    return jsonify({'status': 'success', 'message': 'Data received and processed'})
+    selections = data['selections']
+    for column in selections.keys():
+        selections[column] = counts.types_to_ints(types,column,selections[column])
+    target = data['targetColumn']
+    answers = counts.count_variable(df,target,selections)
+    string_keys_dictionary = {str(key): value for key, value in answers.items()}
+    return string_keys_dictionary
 
 
 @app.route('/set_target_column', methods=['POST'])
