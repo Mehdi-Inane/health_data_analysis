@@ -91,6 +91,7 @@
             const targetColumnSelect = document.getElementById('targetColumn');
             const submitBtn = document.getElementById('submitSelection');
             const submitTargetBtn = document.getElementById('submitTarget');
+            const finalizeBtn = document.getElementById('finalizeSelection');
             const selectionsBox = document.getElementById('currentSelections');
         
             // Function to update the Current Selections box
@@ -160,21 +161,46 @@
                 if (selectedColumn && checkedValues.length > 0) {
                     selections[selectedColumn] = checkedValues;
                     updateSelectionsBox(); // Show the updated selections
-                    columnsSelect.value = ''; // Reset column selection
+                    columnsSelect.value = ''; // Reset column selection for further selection
                     document.getElementById('valueSelector').innerHTML = ''; // Clear value selection area
                 }
             });
         
-            // Handle target column submission
+            // Handle target column submission for immediate feedback
             submitTargetBtn.addEventListener('click', function() {
                 targetColumn = targetColumnSelect.value;
                 if (targetColumn) {
                     console.log("Target column selected:", targetColumn); // For debugging, or you can handle it as needed
-                    // Optionally, send the target column to the server here
+                }
+            });
+        
+            // Finalize and send all data
+            finalizeBtn.addEventListener('click', function() {
+                if (Object.keys(selections).length > 0 && targetColumn) {
+                    const dataToSend = {
+                        selections: selections,
+                        targetColumn: targetColumn
+                    };
+                    fetch('/finalize_selections', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(dataToSend),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log("Data sent successfully", data);
+                        // Handle any response here, such as confirming success to the user
+                    });
+                } else {
+                    console.log("No selections or target column to send.");
+                    // Provide feedback to the user to make a selection
                 }
             });
         });
         </script>
+        
         
     
 </body>

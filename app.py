@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request, render_template
 import pandas as pd
+import counts
 
 app = Flask(__name__)
 
@@ -21,12 +22,15 @@ def get_unique_values():
     unique_values = df[column].dropna().unique().tolist()
     return jsonify(unique_values)
 
+@app.route('/finalize_selections', methods=['POST'])
+def finalize_selections():
+    data = request.json
+    print("Finalized selections:", data['selections'])
+    print("Finalized target column:", data['targetColumn'])
+    # Process the data as needed here
 
-@app.route('/process_selections', methods=['POST'])
-def process_selections():
-    selections = request.json
-    print(selections)
-    return jsonify({'status': 'success', 'selections': selections})
+    return jsonify({'status': 'success', 'message': 'Data received and processed'})
+
 
 @app.route('/set_target_column', methods=['POST'])
 def set_target_column():
