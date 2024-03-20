@@ -2,68 +2,180 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Landing Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emma Clinic</title>
     <style>
-        #checkboxes {
-            margin-top: 20px;
+        body {
+            background-color: #ffcccc; /* Light red background */
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column; /* Align children vertically */
+            align-items: center;
+            height: calc(100vh - 40px);
+        }
+        .header {
+            background-color: #ff9999; /* Darker red for the header */
+            color: #fff;
+            padding: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+            width: 80%;
+            max-width: 1200px; /* Adjust based on your preference */
+            box-sizing: border-box;
+            margin-bottom: 20px; /* Spacing between header and boxes */
+        }
+        .container {
+            display: flex;
+            justify-content: space-around;
+            align-items: start;
+            width: 80%;
+            max-width: 1200px; /* Adjust based on your preference */
+        }
+        .box {
+            flex: 1; /* Each box will take equal width */
+            margin: 10px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            height: 300px; /* Adjust based on your content */
+            overflow-y: auto; /* Allows scrolling if content overflows */
+        }
+        select, option {
+            padding: 5px 10px;
+            width: 100%; /* Makes select box full width of parent container */
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
-
-<div>
-    <label for="columnsSelect">Select Column:</label>
-    <select id="columnsSelect">
-        <option value="">--Please choose an option--</option>
-    </select>
-</div>
-
-<div id="checkboxes">
-    <!-- Checkboxes will be added here -->
-</div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        fetch('/get_columns')
-            .then(response => response.json())
-            .then(columns => {
-                const select = document.querySelector('#columnsSelect');
-                columns.forEach(column => {
-                    const option = document.createElement('option');
-                    option.value = column;
-                    option.innerText = column;
-                    select.appendChild(option);
+    <div class="header">
+        <h1>Emma Clinic</h1>
+    </div>
+    <div class="container">
+        <div class="box" id="targetColumnSelector">
+            <label for="targetColumn">Select Target Column:</label>
+            <select name="targetColumn" id="targetColumn">
+                <option value="">--Select a Target Column--</option>
+                <!-- Options will be dynamically added here -->
+            </select>
+            <button id="submitTarget">Submit Target</button>
+        </div>        
+        <div class="box" id="columnSelector">
+            <label for="columns">Select Column:</label>
+            <select name="columns" id="columns">
+                <option value="">--Select a Column--</option>
+                <!-- Options will be dynamically added here -->
+            </select>
+            <!-- Additional choices will be dynamically added here -->
+        </div>
+        <div class="box" id="valueSelector">
+            <p>Select values from the chosen column</p>
+            <!-- Checkboxes for values will be dynamically added here -->
+        </div>
+        <div class="box" id="currentSelections">
+            <h3>Current Selections</h3>
+            <!-- Selected columns and values will be listed here -->
+        </div>
+        <button id="submitSelection">Submit Selection</button>
+    </div>
+    <button id="finalizeSelection">Finalize Selections</button>
+    <script>
+        let selections = {}; // Dictionary to hold user selections for main columns
+        let targetColumn = ''; // Variable to hold the selected target column
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const columnsSelect = document.getElementById('columns');
+            const targetColumnSelect = document.getElementById('targetColumn');
+            const submitBtn = document.getElementById('submitSelection');
+            const submitTargetBtn = document.getElementById('submitTarget');
+            const selectionsBox = document.getElementById('currentSelections');
+        
+            // Function to update the Current Selections box
+            function updateSelectionsBox() {
+                selectionsBox.innerHTML = '<h3>Current Selections</h3>';
+                Object.keys(selections).forEach(column => {
+                    const div = document.createElement('div');
+                    div.textContent = `${column}: ${selections[column].join(', ')}`;
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.textContent = 'Remove';
+                    removeBtn.onclick = function() {
+                        delete selections[column];
+                        updateSelectionsBox(); // Refresh the selections display
+                    };
+                    div.appendChild(removeBtn);
+                    selectionsBox.appendChild(div);
+                });
+            }
+        
+            // Populate column selectors
+            fetch('/get_columns')
+                .then(response => response.json())
+                .then(columns => {
+                    columns.forEach(column => {
+                        const mainOption = document.createElement('option');
+                        const targetOption = document.createElement('option');
+                        mainOption.value = column;
+                        mainOption.textContent = column;
+                        targetOption.value = column;
+                        targetOption.textContent = column;
+                        columnsSelect.appendChild(mainOption);
+                        targetColumnSelect.appendChild(targetOption);
+                    });
+                });
+        
+            // Handle main column and value selections
+            columnsSelect.addEventListener('change', function() {
+                const column = this.value;
+                fetch('/get_unique_values', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({column: column})
+                })
+                .then(response => response.json())
+                .then(values => {
+                    const valuesContainer = document.getElementById('valueSelector');
+                    valuesContainer.innerHTML = ''; // Clear previous values
+                    values.forEach(value => {
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.value = value;
+                        checkbox.name = 'valueCheckbox';
+                        const label = document.createElement('label');
+                        label.appendChild(checkbox);
+                        label.appendChild(document.createTextNode(value));
+                        valuesContainer.appendChild(label);
+                        valuesContainer.appendChild(document.createElement('br'));
+                    });
                 });
             });
-
-        const select = document.querySelector('#columnsSelect');
-        select.addEventListener('change', function() {
-            const column = this.value;
-            fetch('/get_unique_values', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({column: column}),
-            })
-            .then(response => response.json())
-            .then(values => {
-                const checkboxesDiv = document.querySelector('#checkboxes');
-                checkboxesDiv.innerHTML = ''; // Clear previous checkboxes
-                values.forEach(value => {
-                    const label = document.createElement('label');
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.value = value;
-                    label.appendChild(checkbox);
-                    label.appendChild(document.createTextNode(value));
-                    checkboxesDiv.appendChild(label);
-                    checkboxesDiv.appendChild(document.createElement('br'));
-                });
+        
+            submitBtn.addEventListener('click', function() {
+                const selectedColumn = columnsSelect.value;
+                const checkedValues = Array.from(document.querySelectorAll('input[name="valueCheckbox"]:checked')).map(cb => cb.value);
+                
+                if (selectedColumn && checkedValues.length > 0) {
+                    selections[selectedColumn] = checkedValues;
+                    updateSelectionsBox(); // Show the updated selections
+                    columnsSelect.value = ''; // Reset column selection
+                    document.getElementById('valueSelector').innerHTML = ''; // Clear value selection area
+                }
+            });
+        
+            // Handle target column submission
+            submitTargetBtn.addEventListener('click', function() {
+                targetColumn = targetColumnSelect.value;
+                if (targetColumn) {
+                    console.log("Target column selected:", targetColumn); // For debugging, or you can handle it as needed
+                    // Optionally, send the target column to the server here
+                }
             });
         });
-    });
-</script>
-
+        </script>
+        
+    
 </body>
 </html>

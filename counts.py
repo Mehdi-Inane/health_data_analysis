@@ -47,6 +47,5 @@ def main():
     print(count_variable(df,target_name,group))
 
 
-
 if __name__ == "__main__":
     main()
